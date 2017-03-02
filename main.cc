@@ -8,6 +8,7 @@
 #include "server.h" 
 #include "proto/machine_study.pb.h"
 
+
 using namespace std::placeholders;
 
 static void readcb(int fd, char* buf, int len)
@@ -17,15 +18,15 @@ static void readcb(int fd, char* buf, int len)
     printf("msg %s\n", coder.getMsgName().c_str());
     invorkfun(coder.getMsgName(), coder.getBody());
 }
-static void onimage(const message_t & v)
+static void heart(const message_t & v)
 {
-    mstudy::ImageData * msg = dynamic_cast<mstudy::ImageData *>(v.get());
-    printf("t_id %ld width %d height %d\n",msg->st_id(), msg->resize_width(), msg->resize_height()); 
+    mstudy::Heart * msg = dynamic_cast<mstudy::Heart *>(v.get());
+    LOG(INFO) << "Heart: " << msg->heart();
 }
 int main(int argc, char * argv[])
 {
     int port = atoi(argv[1]);
-    registerfunc<mstudy::ImageData>(std::bind(onimage,_1));
+    registerfunc<mstudy::Heart>(std::bind(heart,_1));
 	co_setreadcb(readcb);
     co_service(port, 2);
     return 0;

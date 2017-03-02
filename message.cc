@@ -18,7 +18,9 @@ void invorkfun(const std::string& name, const std::string& data)
 
     if (itor != callbacks.end()){
         itor->second(msg);
-    }    
+    }else{
+        printf("can not find the functional.\n");
+    }
 	// callback = std::bind(onUnknowMessage, this, std::placeholders::_1,std::placeholders::_2);
 }
 callback_t getfunc(const std::string& name)
@@ -32,7 +34,9 @@ callback_t getfunc(const std::string& name)
 			if (itor != callbacks.end()){
 				callback = itor->second;
 		   } 
-	}
+	}else{
+        printf("parse msg error \n");
+    }
 
 	return callback;
 }
@@ -59,3 +63,13 @@ static message_t createmessage(const std::string& name){
 
 	return message;
 }
+/*
+template<typename T>
+void ProtoMessage::registerMessage(callback_t func)
+{
+   // auto descriptior = mstudy::ImageData::descriptor();
+    auto descriptior = T::descriptor();
+    callbacks[descriptior] = func;
+}
+*/
+

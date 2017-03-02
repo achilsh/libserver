@@ -27,6 +27,7 @@ closecallback_t close_pfn = NULL;
 struct task_t {
     stCoRoutine_t * co;
     int fd;
+    bool timeoutclose; // timeout close.
 };
 
 // static functions
@@ -99,15 +100,23 @@ static void *readco( void *arg )
     // read body
     int pos = 0;
     int ret;
-
-    printf("fd %d new connected.\n", fd);
     for(;;)
     {
-       
         struct pollfd pf = { 0 };
         pf.fd = fd;
         pf.events = (POLLIN|POLLERR|POLLHUP);
-        co_poll( co_get_epoll_ct(), &pf, 1, 60*1000);
+        int nfs = co_poll( co_get_epoll_ct(), &pf, 1, 60*1000);
+        
+        printf("nfs = %d \n", nfs);
+        // timeout
+        if (nfs == 0) {
+            if (t->timeoutclose){
+                close(fd);
+                break;
+            }else{
+                continue;
+            }
+        }
         
         // header
         if (header == 0 ) {
@@ -161,13 +170,12 @@ static void *default_readwrite_routine( void *arg )
     int fd = t->fd;
     char buf[ 1024 * 16 ];
 
-    printf("fd %d connected.\n", fd);
     for(;;)
     {
         struct pollfd pf = { 0 };
         pf.fd = fd;
         pf.events = (POLLIN|POLLERR|POLLHUP);
-        co_poll( co_get_epoll_ct(), &pf, 1, 60*1000);
+        co_poll( co_get_epoll_ct(), &pf, 0, 60*1000);
 
         int ret = read( fd, buf, sizeof(buf) );
         if( ret > 0 ) {
@@ -180,12 +188,9 @@ static void *default_readwrite_routine( void *arg )
            continue;
         }
     }
-
-    // printf("fd %d close.\n", fd);
     free(t);
     return 0;
 }
-
 static void *accept_routine( void * )
 {
 	co_enable_hook_sys();
@@ -208,11 +213,12 @@ static void *accept_routine( void * )
         }
         SetNonBlock( fd );
         task_t * t = (task_t*)malloc(sizeof(task_t));
-        stCoRoutine_t *accept_co = NULL;
+        stCoRoutine_t *read_co = NULL;
         t->co = NULL;
         t->fd = fd;
-        co_create( &accept_co, NULL, readco, t);
-        co_resume( accept_co );
+        t->timeoutclose = true;
+        co_create( &read_co, NULL, readco, t);
+        co_resume( read_co );
     }
     return 0;
 }
@@ -251,3 +257,26 @@ void co_setclosecb(closecallback_t f)
 	close_pfn = f;
 }
 
+int co_connect(const char *ip, int port)
+{
+    int fd = socket(PF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in addr;
+    SetAddr(ip, port, addr);
+    if (connect(fd,(struct sockaddr*)&addr,sizeof(addr)) == -1){
+        return -1;
+    }
+    SetNonBlock( fd );
+    task_t * t = (task_t*)malloc(sizeof(task_t));
+    stCoRoutine_t *read_co = NULL;
+    t->co = NULL;
+    t->fd = fd;
+    t->timeoutclose = false;
+    co_create( &read_co, NULL, readco, t);
+    co_resume( read_co );
+    return fd;
+}
+
+void co_loop()
+{
+    co_eventloop( co_get_epoll_ct(),0,0 );
+}
