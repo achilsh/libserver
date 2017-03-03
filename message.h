@@ -12,7 +12,7 @@
 using namespace google::protobuf;
 
 typedef std::shared_ptr<google::protobuf::Message> message_t;
-typedef std::function<void (const message_t &)> callback_t;
+typedef std::function<void (int fd, const message_t & msg)> callback_t;
 typedef std::map<const google::protobuf::Descriptor*, callback_t> callback_map_t;
 
 extern callback_map_t callbacks;
@@ -24,5 +24,5 @@ void registerfunc(callback_t func)
     callbacks[descriptior] = func;
 }
 callback_t getfunc(const std::string& name);
-void invorkfun(const std::string& name, const std::string& data);
+void invorkfun(int fd, const std::string& name, const std::string& data);
 #endif

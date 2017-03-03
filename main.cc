@@ -16,9 +16,9 @@ static void readcb(int fd, char* buf, int len)
     net::Coder coder;
     coder.decoding(buf, len);
     printf("msg %s\n", coder.getMsgName().c_str());
-    invorkfun(coder.getMsgName(), coder.getBody());
+    invorkfun(fd, coder.getMsgName(), coder.getBody());
 }
-static void heart(const message_t & v)
+static void heart(int fd, const message_t & v)
 {
     mstudy::Heart * msg = dynamic_cast<mstudy::Heart *>(v.get());
     LOG(INFO) << "Heart: " << msg->heart();
@@ -26,7 +26,7 @@ static void heart(const message_t & v)
 int main(int argc, char * argv[])
 {
     int port = atoi(argv[1]);
-    registerfunc<mstudy::Heart>(std::bind(heart,_1));
+    registerfunc<mstudy::Heart>(std::bind(heart,_1, _2));
 	co_setreadcb(readcb);
     co_service(port, 2);
     return 0;
