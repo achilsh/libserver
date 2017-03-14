@@ -19,7 +19,7 @@ using namespace std;
 int co_accept(int fd, struct sockaddr *addr, socklen_t *len );
 
 static int g_listen_fd = -1;
-static const int MAX_PACKAGE_SIZE = 1024 * 16;
+static const int MAX_PACKAGE_SIZE = 1024 * 30;
 readcallback_t read_pfn = NULL;
 closecallback_t close_pfn = NULL;
 
@@ -106,8 +106,6 @@ static void *readco( void *arg )
         pf.fd = fd;
         pf.events = (POLLIN|POLLERR|POLLHUP);
         int nfs = co_poll( co_get_epoll_ct(), &pf, 1, 60*1000);
-        
-        printf("nfs = %d \n", nfs);
         // timeout
         if (nfs == 0) {
             if (t->timeoutclose){
@@ -279,4 +277,32 @@ int co_connect(const char *ip, int port)
 void co_loop()
 {
     co_eventloop( co_get_epoll_ct(),0,0 );
+}
+
+int co_send(int fd, const char * buf, int len)
+{
+    int pos = 0;
+
+    while(true){
+        int sendlen = send(fd,(void*)(pos + buf), len - pos, 0);
+        if (sendlen <= 0 ){
+            break;
+        }
+        pos += sendlen;
+        if (pos >= len )
+            break;
+    }
+
+    return pos;
+}
+int co_connect_noloop(const char *ip, int port)
+{    
+    int fd = socket(PF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in addr;
+    SetAddr(ip, port, addr);
+    if (connect(fd,(struct sockaddr*)&addr,sizeof(addr)) == -1){
+        return -1;
+    }
+    SetNonBlock( fd );
+    return fd; 
 }

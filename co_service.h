@@ -15,7 +15,9 @@ typedef void (*closecallback_t)(int fd, int err);
 int co_service(int port, int progress_num);
 int co_connect(const char *ip, int port);
 void co_loop();
+int co_connect_noloop(const char *ip, int port);
 
+int co_send(int fd, const char * buf, int len);
 void co_setreadcb(readcallback_t f);
 void co_setclosecb(closecallback_t f);
 #endif
