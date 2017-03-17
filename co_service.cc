@@ -22,7 +22,7 @@ static int g_listen_fd = -1;
 static const int MAX_PACKAGE_SIZE = 1024 * 30;
 readcallback_t read_pfn = NULL;
 closecallback_t close_pfn = NULL;
-
+acceptcallback_t accept_pfn = NULL;
 // struct decleare
 struct task_t {
     stCoRoutine_t * co;
@@ -210,6 +210,12 @@ static void *accept_routine( void * )
             continue;
         }
         SetNonBlock( fd );
+
+        // accept callback for user.
+        if (accept_pfn != NULL){
+            accept_pfn(fd, inet_ntoa(addr.sin_addr), addr.sin_port);
+        }
+
         task_t * t = (task_t*)malloc(sizeof(task_t));
         stCoRoutine_t *read_co = NULL;
         t->co = NULL;

@@ -10,6 +10,7 @@
 
 typedef void (*readcallback_t)(int fd, char* buf, int len);
 typedef void (*closecallback_t)(int fd, int err);
+typedef void (*acceptcallback_t)(int fd, char* ip, int port);
 
 /*  @progress_num the number of sub progress */
 int co_service(int port, int progress_num);
