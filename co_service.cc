@@ -109,6 +109,7 @@ static void *readco( void *arg )
         // timeout
         if (nfs == 0) {
             if (t->timeoutclose){
+                printf("fd %d timeout\n", fd);
                 close(fd);
                 break;
             }else{
@@ -120,6 +121,7 @@ static void *readco( void *arg )
         if (header == 0 ) {
             ret = read( fd, &header, sizeof(int32_t) );
             if (ret != sizeof(int32_t)){
+                printf("fd %d read error", fd);
                 close(fd);
                 break;
             }else{
@@ -266,6 +268,10 @@ void co_setclosecb(closecallback_t f)
 	close_pfn = f;
 }
 
+void co_setaccpectcb(acceptcallback_t f)
+{
+    accept_pfn = f;
+}
 int co_connect(const char *ip, int port)
 {
     int fd = socket(PF_INET, SOCK_STREAM, 0);

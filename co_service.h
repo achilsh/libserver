@@ -21,4 +21,5 @@ int co_connect_noloop(const char *ip, int port);
 int co_send(int fd, const char * buf, int len);
 void co_setreadcb(readcallback_t f);
 void co_setclosecb(closecallback_t f);
+void co_setaccpectcb(acceptcallback_t f);
 #endif
