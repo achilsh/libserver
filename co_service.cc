@@ -128,7 +128,6 @@ static void *readco( void *arg )
                 if (readlen == 0) {
                     continue;
                 }
-                
                 // error data 
 				if (readlen > MAX_PACKAGE_SIZE || readlen < 0){
 					close(fd);
