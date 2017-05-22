@@ -124,7 +124,13 @@ static void *readco( void *arg )
                 break;
             }else{
                 readlen = ntohl(header);
-				if (readlen > MAX_PACKAGE_SIZE){
+                // is heart data
+                if (readlen == 0) {
+                    continue;
+                }
+                
+                // error data 
+				if (readlen > MAX_PACKAGE_SIZE || readlen < 0){
 					close(fd);
 					err = -1;
 					break;
